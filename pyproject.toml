@@ -1,0 +1,9 @@
+[project]
+name = "zhaw-artificial-intelligence-02"
+version = "0.1.0"
+description = "the five labs of the course Artificial Intelligence 2 at ZHAW"
+requires-python = ">=3.12"
+dependencies = [
+    "numpy>=2.4.3",
+    "websocket-client>=1.9.0",
+]
