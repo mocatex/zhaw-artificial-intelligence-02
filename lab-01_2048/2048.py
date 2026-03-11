@@ -12,7 +12,9 @@
 
 import time
 
-import heuristicai as ai #for running the example
+import heuristicai_moritz as ai #run moritz solution
+# import heuristicai_shpetim as ai #run shpetim solution
+# adapt to 'searchai_moritz' and 'searchai_shpetim' for expectimax solution
 
 #import heuristicai_SOLUTION as ai #for task 3
 #import searchai_SOLUTION as ai #for task 4
