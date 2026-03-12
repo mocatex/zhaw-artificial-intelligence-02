@@ -58,10 +58,20 @@ def score_board(board: np.ndarray) -> float:
 # Expectimax
 # ---------------------------------------------------------------------------
 
+cache = {}
+
 def expectimax(board: np.ndarray, depth: int, is_player_turn: bool) -> float:
 
+    key = (board.tobytes(), depth, is_player_turn)
+
+    if key in cache:
+        return cache[key]
+
+
     if depth == 0:
-        return score_board(board)
+        result = score_board(board)
+        cache[key] = result
+        return result
 
     if is_player_turn:
         best = -1
@@ -71,25 +81,21 @@ def expectimax(board: np.ndarray, depth: int, is_player_turn: bool) -> float:
                 score = expectimax(new_board, depth - 1, is_player_turn=False)
                 if score > best:
                     best = score
-        return best if best != -1 else score_board(board)
+        result =  best if best != -1 else score_board(board)
 
     else:
         empty_cells = list(zip(*np.where(board == 0)))
-
-        if not empty_cells:
-            return score_board(board)
-
-        # Sample a fixed small number of cells — keeps branching factor constant
         sampled = random.sample(empty_cells, min(MAX_CHANCE_CELLS, len(empty_cells)))
-
         total = 0.0
         for (r, c) in sampled:
             for tile_value, prob in [(2, PROB_2), (4, PROB_4)]:
                 new_board = board.copy()
                 new_board[r, c] = tile_value
                 total += (prob / len(sampled)) * expectimax(new_board, depth, is_player_turn=True)
+        result = total
 
-        return total
+    cache[key] = result
+    return result
 
 
 # ---------------------------------------------------------------------------
@@ -97,6 +103,7 @@ def expectimax(board: np.ndarray, depth: int, is_player_turn: bool) -> float:
 # ---------------------------------------------------------------------------
 
 def find_best_move(board):
+    cache.clear()
     best_move = -1
     best_score = -1
 
