@@ -1,7 +1,8 @@
 import numpy as np
 import random
 import game
-import heuristicai_moritz as ai  # Change to 'import searchai as ai' for Task 4
+# import heuristicai_moritz as ai  # Change to 'import searchai as ai' for Task 4
+import heuristicai_shpetim as ai
 import time
 
 
