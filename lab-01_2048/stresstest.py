@@ -1,4 +1,4 @@
-import numpy as np
+# import numpy as np
 import random
 import game
 # import heuristicai_moritz as ai # custom heuristic AI for Task 3
@@ -18,7 +18,7 @@ def add_random_tile(board):
 
 def simulate_game():
     # Initialize an empty board and add two tiles
-    board = np.zeros((4, 4), dtype=int)
+    board = [[0] * 4 for _ in range(4)]
     board = add_random_tile(add_random_tile(board))
 
     score = 0
@@ -46,7 +46,7 @@ def simulate_game():
         # 4. Update board and add a random tile
         board = add_random_tile(new_board)
 
-    return np.max(board), np.sum(board)  # Return Max Tile and "Total Value" (Score proxy)
+    return max(max(row) for row in board), score
 
 def run_stress_test(games=200):
     results = []
@@ -57,7 +57,7 @@ def run_stress_test(games=200):
         max_tile, _ = simulate_game()
         results.append(max_tile)
 
-        if (i + 1) % 50 == 0:
+        if (i + 1) % 1 == 0:
             print(f"Completed {i + 1} games...")
 
     end_time = time.time()
@@ -73,4 +73,4 @@ def run_stress_test(games=200):
 
 
 if __name__ == "__main__":
-    run_stress_test(200)
+    run_stress_test(10)
