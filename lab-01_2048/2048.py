@@ -12,9 +12,8 @@
 
 import time
 
-# import heuristicai_moritz as ai #run moritz solution
-import heuristicai_shpetim as ai #run shpetim solution
-# adapt to 'searchai_moritz' and 'searchai_shpetim' for expectimax solution
+# import heuristicai_moritz as ai # custom heuristic AI for Task 3
+import searchai_moritz as ai # expectimax search AI for Task 4
 
 #import heuristicai_SOLUTION as ai #for task 3
 #import searchai_SOLUTION as ai #for task 4

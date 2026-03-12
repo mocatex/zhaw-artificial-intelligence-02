@@ -1,6 +1,6 @@
 # -*- coding: UTF-8 -*-
 import random
-import numpy as np
+# import numpy as np
 
 # Author:      chrn (original by Micha Schwendener)
 # Date:				 11.11.2016
@@ -16,11 +16,9 @@ def merge_right(b):
     [[0, 0, 2, 8], [0, 2, 4, 8], [0, 0, 0, 4], [0, 0, 4, 4]]
     """
 
-    def reverse(x):
-        return list(reversed(x))
-
-    t = map(reverse, b)
-    return np.array([reverse(x) for x in merge_left(t)])
+    t = [list(reversed(row)) for row in b]
+    merged_t = merge_left(t)
+    return [list(reversed(row)) for row in merged_t]
 
 def merge_up(b):
     """
@@ -33,7 +31,7 @@ def merge_up(b):
     """
 
     t = merge_left(zip(*b))
-    return np.array([list(x) for x in zip(*t)])
+    return [list(row) for row in zip(*t)]
 
 def merge_down(b):
     """
@@ -46,7 +44,7 @@ def merge_down(b):
     """
 
     t = merge_right(zip(*b))
-    return np.array([list(x) for x in zip(*t)])
+    return [list(row) for row in zip(*t)]
 
 def merge_left(b):
     """
@@ -79,10 +77,11 @@ def merge_left(b):
 
     board = []
     for row in b:
-        merged = merge([x for x in row if x != 0], [])
-        merged = merged + [0]*(len(row)-len(merged))
+        row_list = list(row)
+        merged = merge([x for x in row_list if x != 0], [])
+        merged = merged + [0]*(len(row_list)-len(merged))
         board.append(merged)
-    return np.array(board)
+    return board
 
 def move_exists(b):
     """
@@ -98,5 +97,14 @@ def move_exists(b):
     for row in b:
         for x, y in zip(row[:-1], row[1:]):
             if x == y or x == 0 or y == 0:
+                return True
+        # Check last element for 0 (zip stops at second to last)
+        if row[-1] == 0: return True
+
+        # Check vertical merges (transpose and check horizontal)
+    transposed = zip(*b)
+    for col in transposed:
+        for x, y in zip(col[:-1], col[1:]):
+            if x == y:
                 return True
     return False

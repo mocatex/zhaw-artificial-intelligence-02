@@ -3,7 +3,7 @@ import math
 import re
 import time
 import json
-import numpy as np
+# import numpy as np
 
 # Author:      chrn (original by nneonneo)
 # Date:				 11.11.2016
@@ -93,15 +93,15 @@ class Fast2048Control(Generic2048Control):
     def get_board(self):
         # Chrome refuses to serialize the Grid object directly through the debugger.
         grid = json.loads(self.execute('JSON.stringify(GameManager._instance.grid)'))
-        board = np.array([[0]*4 for _ in range(4)])
+        board = [[0]*4 for _ in range(4)]
         for row in grid['cells']:
             for cell in row:
                 if cell is None:
                     continue
-                pos = cell['x'], cell['y']
+                x, y = cell['x'], cell['y']
                 tval = cell['value']
                 # use this line if you want to return the real values not the log2 ones
-                board[pos[1]][pos[0]] = tval
+                board[y][x] = tval
                 #board[pos[1]][pos[0]] = int(round(math.log(tval, 2)))
 
         return board
