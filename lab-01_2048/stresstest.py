@@ -2,7 +2,8 @@ import numpy as np
 import random
 import game
 # import heuristicai_moritz as ai  # Change to 'import searchai as ai' for Task 4
-import heuristicai_shpetim as ai
+# import heuristicai_shpetim as ai
+import searchai_shpetim as ai
 import time
 
 
@@ -73,4 +74,4 @@ def run_stress_test(games=200):
 
 
 if __name__ == "__main__":
-    run_stress_test(200)
+    run_stress_test(5)
