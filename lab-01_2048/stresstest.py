@@ -1,8 +1,8 @@
 # import numpy as np
 import random
 import game
-# import heuristicai_moritz as ai # custom heuristic AI for Task 3
-import searchai_moritz as ai # expectimax search AI for Task 4
+import heuristicai_moritz as ai # custom heuristic AI for Task 3
+# import searchai_moritz as ai # expectimax search AI for Task 4
 import time
 
 
@@ -57,7 +57,7 @@ def run_stress_test(games=200):
         max_tile, _ = simulate_game()
         results.append(max_tile)
 
-        if (i + 1) % 1 == 0:
+        if (i + 1) % 25 == 0:
             print(f"Completed {i + 1} games...")
 
     end_time = time.time()
@@ -67,10 +67,10 @@ def run_stress_test(games=200):
     print(f"Best Tile Reached: {max(results)}")
 
     # Optional: Count how many times you hit 512, 1024, etc.
-    for threshold in [8, 16, 32, 64, 128, 256, 512, 1024, 2048]:
+    for threshold in [8, 16, 32, 64, 128, 256, 512, 1024, 2048, 4096, 8192]:
         count = sum(1 for r in results if r >= threshold)
         print(f"Reached {threshold}+: {count}/{games} ({count / games * 100}%)")
 
 
 if __name__ == "__main__":
-    run_stress_test(10)
+    run_stress_test(500)
