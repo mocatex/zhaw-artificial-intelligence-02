@@ -7,6 +7,24 @@ TRANSPOSITION_TABLE = {} # cache for already evaluated board states
 LOG_MAP = {2**i: i for i in range(1, 17)}
 LOG_MAP[0] = 0
 
+OLD_HEURISTIC_WEIGHTS = {
+    'C_WEIGHTS': 2.0,
+    'C_SMOOTH': 50.0,
+    'C_LONELY': 500.0,
+    'C_MERGE': 500.0,
+    'C_MONO': 1000.0,
+    'C_EMPTY': 20000.0
+}
+
+HEURISTIC_WEIGHTS = {
+    'C_WEIGHTS': 0.9555769291712857,
+    'C_SMOOTH': 31.317286696013884,
+    'C_LONELY': 330.7719668250778,
+    'C_MERGE': 344.7608136774692,
+    'C_MONO': 786.8569673572639,
+    'C_EMPTY': 24789.567710433923
+}
+
 # Author:      chrn (original by nneonneo)
 # Date:        11.11.2016
 # Copyright:   Algorithm from https://github.com/nneonneo/2048-ai
@@ -18,6 +36,15 @@ POWER_4_WEIGHT_MATRIX = [
     [4 ** 7, 4 ** 6, 4 ** 5, 4 ** 4],
     [4 ** 0, 4 ** 1, 4 ** 2, 4 ** 3]
 ]
+
+POWER_2_WEIGHT_MATRIX = [
+    [2 ** 15, 2 ** 14, 2 ** 13, 2 ** 12],
+    [2 ** 8, 2 ** 9, 2 ** 10, 2 ** 11],
+    [2 ** 7, 2 ** 6, 2 ** 5, 2 ** 4],
+    [2 ** 0, 2 ** 1, 2 ** 2, 2 ** 3]
+]
+
+ACTIVE_WEIGHT_MATRIX = POWER_2_WEIGHT_MATRIX
 
 def get_monotonicity(log_board):
     """
@@ -111,21 +138,13 @@ def score_board(board, weight_matrix) -> int:
             if board[r][c] == 0:
                 empty_count += 1
 
-    # Weights in snake pattern
-    # C_WEIGHTS = 1.0
-    C_SMOOTH = 16.0
-    C_LONELY = 256.0
-    C_MERGE = 4096.0
-    C_MONO = 65536.0
-    C_EMPTY = 1048576.0
-
     # 3. Calculate Components
-    # w_score = np.sum(log_board * weight_matrix) * C_WEIGHTS
-    m_score = get_monotonicity(log_board) * C_MONO
-    s_score = get_smoothness(log_board) * C_SMOOTH
-    l_score = get_isolation_penalty(board) * C_LONELY
-    b_score = get_merge_potential(board) * C_MERGE
-    e_score = empty_count * C_EMPTY
+    w_score = w_score * HEURISTIC_WEIGHTS['C_WEIGHTS']
+    m_score = get_monotonicity(log_board) * HEURISTIC_WEIGHTS['C_MONO']
+    s_score = get_smoothness(log_board) * HEURISTIC_WEIGHTS['C_SMOOTH']
+    l_score = get_isolation_penalty(board) * HEURISTIC_WEIGHTS['C_LONELY']
+    b_score = get_merge_potential(board) * HEURISTIC_WEIGHTS['C_MERGE']
+    e_score = empty_count * HEURISTIC_WEIGHTS['C_EMPTY']
 
     return w_score + m_score + s_score + l_score + b_score + e_score
 
@@ -147,7 +166,7 @@ def expectimax(board, depth, is_player_turn):
     # ---------------------------------------------------------
     if depth == 0 or not game.move_exists(board):
         # We use the heuristic we built in the previous task!
-        return score_board(board, POWER_4_WEIGHT_MATRIX)
+        return score_board(board, ACTIVE_WEIGHT_MATRIX)
 
     # ---------------------------------------------------------
     # MAX NODE (Player's Turn) -> maximize the score
@@ -166,7 +185,7 @@ def expectimax(board, depth, is_player_turn):
 
         # no valid moves -> dead end
         if best_score == -float('inf'):
-            return score_board(board, POWER_4_WEIGHT_MATRIX)
+            return score_board(board, ACTIVE_WEIGHT_MATRIX)
 
         TRANSPOSITION_TABLE[state_key] = best_score  # Cache the result before returning
 
@@ -180,7 +199,7 @@ def expectimax(board, depth, is_player_turn):
         empty_cells = [(r, c) for r in range(4) for c in range(4) if board[r][c] == 0]
 
         if not empty_cells:
-            return score_board(board, POWER_4_WEIGHT_MATRIX)
+            return score_board(board, ACTIVE_WEIGHT_MATRIX)
 
         expected_score = 0
         num_empty = len(empty_cells)
@@ -213,32 +232,15 @@ def find_best_move(board):
 
     UP, DOWN, LEFT, RIGHT = 0, 1, 2, 3
     move_args = [UP,DOWN,LEFT,RIGHT]
-    base_score = score_board(board, POWER_4_WEIGHT_MATRIX)
 
-    valid_moves = []
-    for move in [UP, DOWN, LEFT, RIGHT]:
-        newboard = execute_move(move, board)
-        if not board_equals(board, newboard):
-            # Do a quick immediate check
-            immediate_score = score_board(newboard, POWER_4_WEIGHT_MATRIX)
+    result = [score_toplevel_move(m, board) for m in move_args]
 
-            # If the move drops our score by a massive amount (e.g., 20%), skip the deep search!
-            if immediate_score < (base_score * 0.8):
-                continue
+    best_score = max(result)
 
-            valid_moves.append(move)
+    if best_score == -1e10:
+        return random.choice(move_args)  # Fallback
 
-    bestmove = -1
-
-    best_score = -float('inf')
-    for move in valid_moves:
-        score = score_toplevel_move(move, board)
-        if score > best_score:
-            best_score = score
-            bestmove = move
-
-    # Fallback if everything was pruned
-    return bestmove if bestmove != -1 else random.choice([UP, DOWN, LEFT, RIGHT])
+    return result.index(best_score) # best move
     
 def score_toplevel_move(move, board):
     """
@@ -252,16 +254,20 @@ def score_toplevel_move(move, board):
     empty_count = sum(row.count(0) for row in newboard)
 
     # Dynamically adjust search depth based on the number of empty cells
-    if empty_count >= 10:
+    if empty_count >= 12:
         SEARCH_DEPTH = 2  # Open board, shallow search
-    elif empty_count >= 6:
+    elif empty_count >= 7:
         SEARCH_DEPTH = 3  # Standard
+    # elif empty_count >= 6:
+    #     SEARCH_DEPTH = 4  # Deeper search as the board gets tighter
     elif empty_count >= 3:
         SEARCH_DEPTH = 4  # Deep search
     elif empty_count >= 1:
         SEARCH_DEPTH = 5  # Survival mode!
     else:
-        SEARCH_DEPTH = 6  # Either die or win.
+        SEARCH_DEPTH = 8  # Either die or win.
+
+    # SEARCH_DEPTH = 2 # uncomment for stress-test
 
     return expectimax(newboard, SEARCH_DEPTH, is_player_turn=False)
 
